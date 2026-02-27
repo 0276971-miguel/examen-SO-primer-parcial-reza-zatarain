@@ -1,0 +1,45 @@
+#include <iostream>
+#include <fstream>
+#include <thread>
+#include <vector>
+#include <mutex>
+#include <string>
+
+std::mutex mtx; 
+
+void writeToFile(int thread_id, const std::string& filename) {
+  
+    std::lock_guard<std::mutex> lock(mtx); 
+    
+    
+    std::ofstream file(filename, std::ios::app);
+    if (file.is_open()) {
+        file << "Esta es la linea de texto escrita por el Thread numero: " << thread_id << "\n";
+        file.close();
+    }
+}
+
+int main() {
+    const int NUM_THREADS = 5;
+    std::string filename = "salida_threads.txt";
+    std::vector<std::thread> threads;
+
+ 
+    std::ofstream init_file(filename, std::ios::trunc);
+    init_file.close();
+
+  
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads.push_back(std::thread(writeToFile, i + 1, filename));
+    }
+
+   
+    for (auto& t : threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+
+    std::cout << "Escritura de hilos finalizada con éxito." << std::endl;
+    return 0;
+}
